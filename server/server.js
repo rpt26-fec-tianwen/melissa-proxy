@@ -27,10 +27,40 @@ app.use('*', (req, res, next) => {
 });
 
 
+
+
+
+
+/* PRODUCT DETAILS */
+
+app.get('/:productId', (req, res, next) => {
+
+  console.log('PROXY /:productId req.params.productId', req.params.productId, req.query.indicator);
+
+  if (!req.query.service) {
+
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+  } else if (req.query.indicator === 'all' ) {
+
+    axios.get(`http://localhost:3001/${req.params.productId}`, { params: { indicator: 'all'} })
+      .then((productDetailsData) => {
+        res.send(productDetailsData.data);
+      })
+      .catch((err) => {
+        res.send(err);
+      });
+
+    } else {
+      res.sendFile(path.join(__dirname, '../public', 'index.html'));
+    }
+
+});
+
+
 app.get('/:id', (req, res, next) => {
-  //console.log('PROXY /:id params ', req.params.service);
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
+
 
 /* PRODUCT CARD */
 
@@ -47,6 +77,78 @@ app.get('/card/:id', (req, res, next) => {
     });
 
 });
+
+
+app.get('/activity/:id', (req, res, next) => {
+
+  console.log('PROXY activity/:id', req.params.id, req.query.indicator);
+
+  axios.get(`http://localhost:3001/${req.params.id}`, { params: { indicator: req.query.indicator } })
+    .then((activityData) => {
+      res.send(activityData.data.activity);
+    })
+    .catch((err) => {
+      res.send(err);
+    })
+});
+
+
+/* RELATED PRODUCTS */
+
+app.get('/related-products/:id', (req, res, next) => {
+
+  console.log('PROXY /related-products/:id ', req.params.id);
+
+  axios.get('http://localhost:8001/related', { params: { id: req.params.id } })
+    .then((relatedData) => {
+      res.send(relatedData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+});
+
+
+/* REVIEWS */
+
+app.get('/reviews', (req, res, next) => {
+
+  console.log('PROXY /reviews req.query.id', req.query.id);
+
+  axios.get('http://localhost:8004/reviews', { params: { id: req.query.id } })
+    .then((reviewsData) => {
+      res.send(reviewsData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+});
+
+
+
+app.post('/reviews-products/:id', (req, res, next) => {
+
+  console.log('PROXY /reviews-products/:id req.params.id, req.query.indicator', req.params.id, req.query.indicator);
+
+  axios.get(`http://localhost:8004/reviews-products/${req.params.id}`, { params: { indicator: req.query.indicator } })
+    .then((reviewsProductsData) => {
+      res.send(reviewsProductsData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+
+
+});
+
+
+app.listen(port, () => {
+  console.log(`FJALLRAVEN PROXY listening at ${host}:${port}`);
+});
+
+
+
+///////
 
 
 // app.get('/display/:id', (req, res, next) => {
@@ -85,79 +187,3 @@ app.get('/card/:id', (req, res, next) => {
 //       res.send(err);
 //     });
 // });
-
-
-/* PRODUCT DETAILS */
-
-app.get('/:productId', (req, res, next) => {
-
-  console.log('PROXY /:productId req.params.productId', req.params.productId);
-
-  axios.get('http://localhost:8002/card/' + req.params.productId)
-    .then((jamesData) => {
-      res.send(jamesData.data);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
-
-
-/* RELATED PRODUCTS */
-
-app.get('/related-products/:id', (req, res, next) => {
-
-  console.log('PROXY /related-products/:id ', req.params.id);
-
-  axios.get('http://localhost:8001/related', { params: { id: req.params.id } } )
-    .then((relatedData) => {
-      res.send(relatedData.data);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
-
-
-/* REVIEWS */
-
-app.get('/reviews', (req, res, next) => {
-
-  console.log('PROXY /reviews req.query.id', req.query.id);
-
-  axios.get('http://localhost:8004/reviews', { params: { id: req.query.id } })
-    .then((reviewsData) => {
-      res.send(reviewsData.data);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
-
-app.post('/reviews', (req, res, next) => {
-
-  console.log('PROXY /reviews req.query.id', req.query.id);
-
-  res.send(req.query.id);
-  // axios({
-  //   method: 'POST',
-  //   url: `http://localhost:8004/reviews`,
-  //   params: {
-  //     id: { product_ids }
-  //   }
-  // })
-  //   .then((reviewsIdData) => {
-  //     res.send(reviewsIdData.data);
-  //   })
-  //   .catch((err) => {
-  //     res.send(err);
-  //   })
-
-});
-
-
-
-
-app.listen(port, () => {
-  console.log(`FJALLRAVEN PROXY listening at ${host}:${port}`);
-});
