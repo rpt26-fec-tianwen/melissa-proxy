@@ -1,20 +1,13 @@
 const express = require('express');
 const app = express();
 const port = 8000;
-
 const path = require('path');
 const fs = require('fs');
-
 const cors = require('cors');
-
 const axios = require('axios');
 const host = "localhost";
 
-const PRODUCT_CARD_SERVICE_URL = "http://localhost:8001/card";
-const PRODUCT_DETAILS_SERVICE_URL = "http://localhost:8002/";
-
 app.use(cors());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/', express.static(path.resolve('public'), { redirect: false }));
@@ -25,10 +18,6 @@ app.use('*', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
-
-
-
-
 
 
 /* PRODUCT DETAILS */
@@ -42,7 +31,7 @@ app.get('/:productId', (req, res, next) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
   } else if (req.query.indicator === 'all' ) {
 
-    axios.get(`http://localhost:3001/${req.params.productId}`, { params: { indicator: 'all'} })
+    axios.get(`http://localhost:8002/${req.params.productId}`, { params: { indicator: 'all'} })
       .then((productDetailsData) => {
         res.send(productDetailsData.data);
       })
@@ -56,6 +45,7 @@ app.get('/:productId', (req, res, next) => {
 
 });
 
+/* STATIC */
 
 app.get('/:id', (req, res, next) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
@@ -79,11 +69,27 @@ app.get('/card/:id', (req, res, next) => {
 });
 
 
+app.get('/images/:id', (req, res, next) => {
+
+  console.log('PROXY /card/:id req.params.id', req.params.id);
+
+  axios.get('http://localhost:8001/images/' + req.params.id)
+    .then((imagesData) => {
+      res.send(imagesData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+
+});
+
+/* ACTIVITY FOR PRODUCT CARD DISPLAY */
+
 app.get('/activity/:id', (req, res, next) => {
 
   console.log('PROXY activity/:id', req.params.id, req.query.indicator);
 
-  axios.get(`http://localhost:3001/${req.params.id}`, { params: { indicator: req.query.indicator } })
+  axios.get(`http://localhost:8002/${req.params.id}`, { params: { indicator: req.query.indicator } })
     .then((activityData) => {
       res.send(activityData.data.activity);
     })
@@ -111,26 +117,11 @@ app.get('/related-products/:id', (req, res, next) => {
 
 /* REVIEWS */
 
-app.get('/reviews', (req, res, next) => {
+app.post('/:id', (req, res, next) => {
 
-  console.log('PROXY /reviews req.query.id', req.query.id);
+  console.log('PROXY Reviews /:id req.params.id', req.params.id);
 
-  axios.get('http://localhost:8004/reviews', { params: { id: req.query.id } })
-    .then((reviewsData) => {
-      res.send(reviewsData.data);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
-
-
-
-app.post('/reviews-products/:id', (req, res, next) => {
-
-  console.log('PROXY /reviews-products/:id req.params.id, req.query.indicator', req.params.id, req.query.indicator);
-
-  axios.get(`http://localhost:8004/reviews-products/${req.params.id}`, { params: { indicator: req.query.indicator } })
+  axios.post(`http://localhost:8004/${req.params.id}`)
     .then((reviewsProductsData) => {
       res.send(reviewsProductsData.data);
     })
@@ -138,52 +129,23 @@ app.post('/reviews-products/:id', (req, res, next) => {
       res.send(err);
     });
 
+});
 
+
+app.get('/reviews-products/:id', (req, res, next) => {
+
+  console.log('PROXY /reviews-products/:id ', req.params.id);
+
+  axios.post('http://localhost:8004/reviews-products/:id', { params: { id: req.params.id } })
+    .then((reviewsProductsData) => {
+      res.send(reviewsProductsdData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
 });
 
 
 app.listen(port, () => {
   console.log(`FJALLRAVEN PROXY listening at ${host}:${port}`);
 });
-
-
-
-///////
-
-
-// app.get('/display/:id', (req, res, next) => {
-
-//   console.log('PROXY /display/:id req.params.id', req.params.id);
-
-//   axios({
-//     method: 'GET',
-//     url: `http://localhost:8001/related/${req.params.id}`
-//   })
-//   .then((displayData) => {
-//     res.send(displayData.data);
-//   })
-//   .catch((err) => {
-//     res.send(err);
-//   });
-
-// });
-
-// app.get('/related/:id', (req, res, next) => {
-
-//   console.log('PROXY /related/:id req.params.id', req.params.id);
-
-//   axios({
-//     method: 'GET',
-//     url: `http://localhost:8001/related/`,
-//     params: {
-//       id: req.query.id
-//     }
-
-//   })
-//     .then((relatedData) => {
-//       res.send(relatedData.data);
-//     })
-//     .catch((err) => {
-//       res.send(err);
-//     });
-// });
