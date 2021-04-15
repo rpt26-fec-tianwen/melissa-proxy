@@ -20,8 +20,27 @@ app.use('*', (req, res, next) => {
 });
 
 
-/* PRODUCT DETAILS */
 
+
+app.get('/card-bundle.js', (req, res, next) => {
+
+  axios.get(`https://fjakeravenbundles.s3.us-east-2.amazonaws.com/card-bundle.js`)
+    .then(cardBundle => {
+      res.send(cardBundle.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+
+});
+
+/* STATIC */
+app.get('/:id', (req, res, next) => {
+  res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
+
+
+/* PRODUCT DETAILS */
 app.get('/details/:productId', (req, res, next) => {
 
   console.log('PROXY /:productId req.params.productId', req.params.productId, req.query.indicator);
@@ -36,12 +55,6 @@ app.get('/details/:productId', (req, res, next) => {
 
 });
 
-/* STATIC */
-
-app.get('/:id', (req, res, next) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
 
 /* PRODUCT CARD */
 
@@ -49,7 +62,7 @@ app.get('/card/:id', (req, res, next) => {
 
   console.log('PROXY /card/:id req.params.id', req.params.id);
 
-  axios.get('http://localhost:8001/card/' + req.params.id)
+  axios.get('http://product-card.fjakeraven.com/card/' + req.params.id)
     .then((cardData) => {
       res.send(cardData.data);
     })
@@ -60,19 +73,21 @@ app.get('/card/:id', (req, res, next) => {
 });
 
 
-// app.get('/images/:id', (req, res, next) => {
+app.get('/images/:id', (req, res, next) => {
 
-//   console.log('PROXY /card/:id req.params.id', req.params.id);
+  console.log('PROXY /card/:id req.params.id', req.params.id);
 
-//   axios.get('http://localhost:8001/images/' + req.params.id)
-//     .then((imagesData) => {
-//       res.send(imagesData.data);
-//     })
-//     .catch((err) => {
-//       res.send(err);
-//     });
+  axios.get('http://product-card.fjakeraven.com/display/' + req.params.id)
+    .then((imagesData) => {
+      res.send(imagesData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
 
-// });
+});
+
+
 
 /* ACTIVITY FOR PRODUCT CARD DISPLAY */
 
@@ -82,6 +97,7 @@ app.get('/activity/:id', (req, res, next) => {
 
   axios.get(`http://3.138.79.75/${req.params.id}`, { params: { indicator: req.query.indicator } })
     .then((activityData) => {
+      console.log('activity ', activityData.data);
       res.send(activityData.data.activity);
     })
     .catch((err) => {
@@ -123,18 +139,18 @@ app.post('/:id', (req, res, next) => {
 });
 
 
-// app.get('/reviews-products/:id', (req, res, next) => {
+app.get('/reviews-products/:id', (req, res, next) => {
 
-//   console.log('PROXY /reviews-products/:id ', req.params.id);
+  console.log('PROXY /reviews-products/:id ', req.params.id);
 
-//   axios.get(`http://54.183.205.73:8004/reviews-products/:id`, { params: { id: req.params.id } })
-//     .then((reviewsProductsData) => {
-//       res.send(reviewsProductsdData.data);
-//     })
-//     .catch((err) => {
-//       res.send(err);
-//     });
-// });
+  axios.get(`http://54.183.205.73:8004/reviews-products/:id`, { params: { id: req.params.id } })
+    .then((reviewsProductsData) => {
+      res.send(reviewsProductsdData.data);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+});
 
 
 app.listen(port, () => {
